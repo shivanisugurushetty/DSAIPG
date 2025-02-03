@@ -102,8 +102,18 @@ public class ThreeSumBenchmark {
      */
     private void benchmarkThreeSum(final String description, final Consumer<int[]> function, int n, final TimeLogger[] timeLoggers) {
         if (description.equals("ThreeSumCubic") && n > 4000) return;
-        // TO BE IMPLEMENTED 
-throw new RuntimeException("implementation missing");
+        int[] xs=supplier.get();
+
+        long totalRawTime = 0;
+        for(int i=0;i<runs;i++){
+            long startTime = System.nanoTime();
+            function.accept(xs);
+            long endTime = System.nanoTime();
+            totalRawTime +=(endTime - startTime);
+        }
+        double avgRawTime = totalRawTime/(double) runs;
+        timeLoggers[0].log("Raw time per run(mSec): ", avgRawTime,n);
+        timeLoggers[1].log("Normalized time per run(n^2): ",avgRawTime,n);
     }
 
     /**
