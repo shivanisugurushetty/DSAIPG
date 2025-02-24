@@ -63,6 +63,20 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
         return timer.repeat(m, false, supplier, function, fPre, fPost);
     }
 
+    public double runFromSupplierInNanoseconds(Supplier<T> supplier, int m) {
+        final Function<T, T> function = t -> {
+            fRun.accept(t);
+            return t;
+        };
+        Timer timer = new Timer();
+        // Warmup phase
+        int warmupRuns = getWarmupRuns(m);
+        timer.repeat(warmupRuns, true, supplier, function, fPre, null);
+
+        // Timed phase
+        return timer.repeat(m, false, supplier, function, fPre, fPost) * 1_000_000; // Convert ms to ns
+    }
+
     /**
      * Constructor for a Benchmark_Timer with the option of specifying all three functions.
      *

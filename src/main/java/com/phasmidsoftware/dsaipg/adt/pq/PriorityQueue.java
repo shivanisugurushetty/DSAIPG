@@ -26,6 +26,9 @@ import java.util.function.Consumer;
  * @param <K>
  */
 public class PriorityQueue<K> implements Iterable<K> {
+    private int spilledElementsCount = 0;
+    private long prioritySum = 0; 
+    private int removedElementsCount = 0; 
 
     /**
      * Primary constructor that takes the max value, an actual array of elements, and a comparator.
@@ -97,6 +100,18 @@ public class PriorityQueue<K> implements Iterable<K> {
         this(n, 1, true, comparator, true);
     }
 
+    // Check if Floyd's trick is enabled
+    public boolean isFloydEnabled() {
+        return floyd;
+    }
+
+    // Return the highest priority element without removing it
+    public K peek() throws PQException {
+        if (isEmpty()) throw new PQException("Priority queue is empty");
+        return binHeap[first];
+    }
+    
+
     /**
      * @return true if the current size is zero.
      */
@@ -117,11 +132,17 @@ public class PriorityQueue<K> implements Iterable<K> {
      * @param key the value of the key to give
      */
     public void give(K key) {
-        if (last == binHeap.length - first)
-            last--; // if we are already at capacity, then we arbitrarily trash the least eligible element
-        // (even if it's more eligible than key).
-        binHeap[++last + first - 1] = key; // insert the key into the binary heap just after the last element
-        swimUp(last + first - 1); // reorder the binary heap
+        if (last == binHeap.length - first) {
+            spilledElementsCount++;  // Track spilled elements
+            // Remove the lowest-priority element before inserting a new one
+            try {
+                take();  // Removes the root element with the lowest priority
+            } catch (PQException e) {
+                System.err.println("Spill handling error: " + e.getMessage());
+            }
+        }
+        binHeap[++last + first - 1] = key; // Insert the key into the heap
+        swimUp(last + first - 1); // Reorder the binary heap
     }
 
     /**
@@ -147,10 +168,14 @@ public class PriorityQueue<K> implements Iterable<K> {
      * @return the root element of the priority queue before reorganization.
      */
     K doTake(Consumer<Integer> f) {
-        K result = binHeap[first]; // get the root element (the largest or smallest, according to field max)
-        swap(first, last-- + first - 1); // swap the root element with the last element
-        f.accept(first); // invoke the function f so that it is ordered again
-        binHeap[last + first] = null; // prevent loitering
+        K result = binHeap[first];
+        if (result instanceof Integer) {
+            prioritySum += (Integer) result; // Add priority value for mean calculation
+            removedElementsCount++; // Track the number of removed elements
+        }
+        swap(first, last-- + first - 1);
+        f.accept(first);
+        binHeap[last + first] = null;
         return result;
     }
 
@@ -239,11 +264,24 @@ public class PriorityQueue<K> implements Iterable<K> {
         binHeap[i] = binHeap[j];
         binHeap[j] = tmp;
     }
+    public int getSpilledElementsCount() {
+        return spilledElementsCount;
+    }
+    
+    public double getRemovedElementsMeanPriority() {
+        return removedElementsCount == 0 ? 0 : (double) prioritySum / removedElementsCount;
+    }
+
+    public void clear() {
+        last = 0; // Reset the heap size
+    }
+    
+    
 
     /**
      * Get the index of the parent of the element at index k
      */
-    private int parent(int k) {
+    protected int parent(int k) {
         return (k + 1 - first) / 2 + first - 1;
     }
 
@@ -251,7 +289,7 @@ public class PriorityQueue<K> implements Iterable<K> {
      * Get the index of the first child of the element at index k.
      * The index of the second child will be one greater than the result.
      */
-    private int firstChild(int k) {
+    protected int firstChild(int k) {
         return (k + 1 - first) * 2 + first - 1;
     }
 
@@ -270,7 +308,7 @@ public class PriorityQueue<K> implements Iterable<K> {
     }
 
     private final boolean max;
-    private final int first;
+    protected final int first;
     private final Comparator<K> comparator;
     private final K[] binHeap; // binHeap[i] is ith element of binary heap (first element is reserved)
     private int last; // number of elements in the binary heap
