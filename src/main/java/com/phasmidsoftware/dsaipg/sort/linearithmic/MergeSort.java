@@ -76,9 +76,10 @@ public class MergeSort<X extends Comparable<X>> extends SortWithComparableHelper
             insertionSort.sort(a, from, to);
             return;
         }
-
-        // TO BE IMPLEMENTED  : implement merge sort with insurance and no-copy optimizations
-throw new RuntimeException("implementation missing");
+        int mid = from + (to - from) / 2;
+        sort(aux, a, from, mid);
+        sort(aux, a, mid, to);
+        merge(aux, a, from, mid, to);
     }
 
     // CONSIDER combine with MergeSortBasic, perhaps.
