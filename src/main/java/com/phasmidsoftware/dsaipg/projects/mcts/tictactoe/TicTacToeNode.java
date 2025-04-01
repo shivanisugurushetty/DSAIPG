@@ -90,10 +90,15 @@ public class TicTacToeNode implements Node<TicTacToe> {
         if (isLeaf()) {
             playouts = 1;
             Optional<Integer> winner = state.winner();
-            if (winner.isPresent())
-                wins = 2; // CONSIDER check that the winner is the correct player. We shouldn't need to.
-            else
-                wins = 1; // a draw.
+            if (winner.isPresent()) {
+                int player = state.player();
+                if (winner.get() == 1 - player)
+                    wins = 2;
+                else
+                    wins = 0;
+            } else {
+                wins = 1;
+            }
         }
     }
 
