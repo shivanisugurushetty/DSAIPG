@@ -200,7 +200,9 @@ public class Position {
      */
     public String render() {
         StringBuilder sb = new StringBuilder();
+        //sb.append("   0 1 2\n"); // Column headers
         for (int i = 0; i < gridSize; i++) {
+            //sb.append(i).append("  "); // Row index
             for (int j = 0; j < gridSize; j++) {
                 sb.append(render(grid[i][j]));
                 if (j < gridSize - 1) sb.append(' ');

@@ -48,41 +48,62 @@ public class TicTacToeNode implements Node<TicTacToe> {
     /**
      * Method to add a child to this Node.
      *
-     * @param state the State for the new chile.
+     * @param state the State for the new child.
      */
+    @Override
     public void addChild(State<TicTacToe> state) {
-        children.add(new TicTacToeNode(state));
+        children.add(new TicTacToeNode(state, this)); // ✅ Updated: pass parent
+    }
+
+    public TicTacToeNode addChildAndReturn(State<TicTacToe> state) {
+        TicTacToeNode child = new TicTacToeNode(state, this); // ✅ Updated: pass parent
+        children.add(child);
+        return child;
     }
 
     /**
      * This method sets the number of wins and playouts according to the children states.
      */
-    public void backPropagate() {
-        playouts = 0;
-        wins = 0;
-        for (Node<TicTacToe> child : children) {
-            wins += child.wins();
-            playouts += child.playouts();
+    public void backPropagate(double result) {
+        visits++;
+        playouts++;
+        if (result == 1.0) {
+            wins += 2;
+        } else if (result == 0.5) {
+            wins += 1;
         }
     }
 
-    /**
-     * @return the score for this Node and its descendents a win is worth 2 points, a draw is worth 1 point.
-     */
+    @Override
+    public void backPropagate() {
+        backPropagate(0.5); // default behavior
+    }
+
     public int wins() {
         return wins;
     }
 
-    /**
-     * @return the number of playouts evaluated (including this node). A leaf node will have a playouts value of 1.
-     */
     public int playouts() {
         return playouts;
     }
 
+    public int getVisits() {
+        return visits;
+    }
+
+    // ✅ Constructor for root node (no parent)
     public TicTacToeNode(State<TicTacToe> state) {
+        this(state, null);
+    }
+
+    // ✅ Constructor for all nodes, with parent
+    public TicTacToeNode(State<TicTacToe> state, TicTacToeNode parent) {
         this.state = state;
-        children = new ArrayList<>();
+        this.parent = parent; // ✅ Store parent
+        this.children = new ArrayList<>();
+        this.visits = 0;
+        this.playouts = 0;
+        this.wins = 0;
         initializeNodeData();
     }
 
@@ -102,9 +123,17 @@ public class TicTacToeNode implements Node<TicTacToe> {
         }
     }
 
+
+
+    public Node<TicTacToe> getParent() {
+        return parent;
+    }
+
+    // === Fields ===
     private final State<TicTacToe> state;
     private final ArrayList<Node<TicTacToe>> children;
-
+    private final TicTacToeNode parent; // ✅ Added parent reference
     private int wins;
     private int playouts;
+    private int visits;
 }
